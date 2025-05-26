@@ -373,61 +373,93 @@
         });
       </script>
 
-      <script>
-        document
-          .getElementById("download-icon-pack")
-          .addEventListener("click", () => {
-            const zip = new JSZip();
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const downloadButton = document.getElementById("download-icon-pack");
+    const baseImage = document.getElementById("base-icon"); // Your base image (must be loaded)
+    const resetBtn = document.getElementById("resetBtn");
+    const echosketchBtn = document.getElementById("echosketch");
 
-            zip.file("apple-touch-icon.png", "path/to/apple-touch-icon.png", {
-              binary: true,
-            });
-            zip.file("icon-192.png", "path/to/icon-192.png", { binary: true });
-            zip.file("favicon.ico", "path/to/favicon.ico", { binary: true });
-            zip.file("icon-512-maskable.png", "path/to/icon-512-maskable.png", {
-              binary: true,
-            });
-            zip.file("icon-192-maskable.png", "path/to/icon-192-maskable.png", {
-              binary: true,
-            });
-            zip.file("icon-512.png", "path/to/icon-512.png", { binary: true });
+    const iconDefinitions = [
+      { name: "apple-touch-icon.png", size: 180 },
+      { name: "icon-192.png", size: 192 },
+      { name: "favicon.ico", size: 48 }, // ICO will be PNG format here unless you use .ico encoder
+      { name: "icon-512-maskable.png", size: 512 },
+      { name: "icon-192-maskable.png", size: 192 },
+      { name: "icon-512.png", size: 512 },
+    ];
 
-            const readmeText = `
-        The following icons were creted 
-      
-        - apple-touch-icon.png
-        - icon-192.png
-        - favicon.ico
-        - icon-512-maskable.png 
-        - icon-192-maskable.png 
-        - icon-512.png
-      
-        echo.JesseJesse.com
-      `;
+    function drawIcon(baseImg, size) {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(baseImg, 0, 0, size, size);
+      return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    }
 
-            zip.file("README.txt", readmeText);
+    if (downloadButton && baseImage) {
+      downloadButton.addEventListener("click", async () => {
+        try {
+          const zip = new JSZip();
 
-            zip.generateAsync({ type: "blob" }).then((content) => {
-              const link = document.createElement("a");
-              link.href = URL.createObjectURL(content);
-              link.download = "EchoSketch.zip";
-              link.click();
-            });
-          });
-          
-          document.getElementById("resetBtn").addEventListener("click", () => {
-            const btn = document.getElementById("resetBtn");
-            btn.classList.add("shake");
-            setTimeout(() => btn.classList.remove("shake"), 400);
-          });
-          
-          document.getElementById("echosketch").addEventListener("click", () => {
-            const btn = document.getElementById("echosketch");
-            btn.classList.add("shake");
-            setTimeout(() => btn.classList.remove("shake"), 600);
-          });
+        
+          if (!baseImage.complete || baseImage.naturalWidth === 0) {
+            alert("Base image not loaded. Make sure #base-icon is visible and has a valid src.");
+            return;
+          }
 
-      </script>
+          for (const { name, size } of iconDefinitions) {
+            const blob = await drawIcon(baseImage, size);
+            zip.file(name, blob);
+          }
+
+          const readmeText = `
+The following icons were created:
+
+- apple-touch-icon.png (180x180)
+- icon-192.png (192x192)
+- favicon.ico (48x48)
+- icon-512-maskable.png (512x512)
+- icon-192-maskable.png (192x192)
+- icon-512.png (512x512)
+
+<!-- EchoSketch.pages.dev -->
+          `.trim();
+
+          zip.file("README.txt", readmeText);
+
+          const content = await zip.generateAsync({ type: "blob" });
+
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(content);
+          link.download = "EchoSketch.zip";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          alert("Error generating icons: " + error.message);
+          console.error(error);
+        }
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        resetBtn.classList.add("shake");
+        setTimeout(() => resetBtn.classList.remove("shake"), 400);
+      });
+    }
+
+    if (echosketchBtn) {
+      echosketchBtn.addEventListener("click", () => {
+        echosketchBtn.classList.add("shake");
+        setTimeout(() => echosketchBtn.classList.remove("shake"), 600);
+      });
+    }
+  });
+</script>
+
     </div>
     <a href="https://echosketch.pages.dev" target="_blank" rel="noopener noreferrer"
        class="block text-center text-sm font-weight-800 text-black hover:text-white hover:underline">
