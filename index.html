@@ -376,46 +376,39 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const downloadButton = document.getElementById("download-icon-pack");
-    const baseImage = document.getElementById("base-icon"); // Your base image (must be loaded)
+    const renderCanvas = document.getElementById("renderCanvas");
     const resetBtn = document.getElementById("resetBtn");
     const echosketchBtn = document.getElementById("echosketch");
 
     const iconDefinitions = [
       { name: "apple-touch-icon.png", size: 180 },
       { name: "icon-192.png", size: 192 },
-      { name: "favicon.ico", size: 48 }, // ICO will be PNG format here unless you use .ico encoder
+      { name: "favicon.ico", size: 48 }, // This will still be PNG unless ICO encoder is used
       { name: "icon-512-maskable.png", size: 512 },
       { name: "icon-192-maskable.png", size: 192 },
       { name: "icon-512.png", size: 512 },
     ];
 
-    function drawIcon(baseImg, size) {
+    function resizeCanvas(sourceCanvas, size) {
       const canvas = document.createElement("canvas");
       canvas.width = canvas.height = size;
       const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, size, size);
-      ctx.drawImage(baseImg, 0, 0, size, size);
+      ctx.drawImage(sourceCanvas, 0, 0, size, size);
       return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
     }
 
-    if (downloadButton && baseImage) {
+    if (downloadButton && renderCanvas) {
       downloadButton.addEventListener("click", async () => {
         try {
           const zip = new JSZip();
 
-        
-          if (!baseImage.complete || baseImage.naturalWidth === 0) {
-            alert("Base image not loaded. Make sure #base-icon is visible and has a valid src.");
-            return;
-          }
-
           for (const { name, size } of iconDefinitions) {
-            const blob = await drawIcon(baseImage, size);
+            const blob = await resizeCanvas(renderCanvas, size);
             zip.file(name, blob);
           }
 
           const readmeText = `
-The following icons were created:
+The following icons were created from canvas:
 
 - apple-touch-icon.png (180x180)
 - icon-192.png (192x192)
@@ -424,7 +417,7 @@ The following icons were created:
 - icon-192-maskable.png (192x192)
 - icon-512.png (512x512)
 
-<!-- EchoSketch.pages.dev -->
+<!-- echosketch.pages.dev -->
           `.trim();
 
           zip.file("README.txt", readmeText);
